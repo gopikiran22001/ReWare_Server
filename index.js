@@ -7,5 +7,6 @@ const connectDB = require('./DataBase/Connection');
 connectDB();
 
 app.use(express.json());
+app.use(cors());
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
