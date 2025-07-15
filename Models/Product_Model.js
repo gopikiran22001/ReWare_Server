@@ -1,0 +1,70 @@
+const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  brand: {
+    type: String,
+    trim: true
+  },
+  size: {
+    type: String,
+    trim: true
+  },
+  condition: {
+    type: String,
+    enum: ['new', 'like new', 'used', 'fair'],
+    default: 'used'
+  },
+  images: {
+    type: [String],
+    required: true
+  },
+  colors: {
+    type: [String],
+    default: []
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: 'No description provided.'
+  },
+  tags: {
+    type: [String],
+    default: []
+  },
+  status: {
+    type: String,
+    enum: ['available', 'sold'],
+    default: 'available'
+  },
+  owner: {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  },
+  customer: {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    name: {
+      type: String,
+      trim: true
+    }
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('Product', productSchema);
