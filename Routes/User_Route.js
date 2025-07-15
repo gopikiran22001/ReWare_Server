@@ -6,10 +6,10 @@ const jwt = require('jsonwebtoken');
 // Middleware
 const upload = require('../MiddleWare/multer'); // Multer config
 const cloudinaryUpload = require('../MiddleWare/upload_profile_picture'); // Single image uploader
-const validateUserFields = require('../MiddleWare/validateUserFields');
+const validateUserFields = require('../MiddleWare/User_Validate');
 
 // Models
-const User = require('../Models/User');
+const User = require('../Models/User_Model');
 
 // Middleware to parse cookies
 router.use(cookieParser());
