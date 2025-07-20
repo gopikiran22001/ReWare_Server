@@ -117,11 +117,14 @@
         const data = JSON.parse(event.data);
         const messagesDiv = document.getElementById('messages');
 
-        if (data.type === 'NEW_MESSAGE') {
-          const div = document.createElement('div');
-          div.className = 'message ' + (data.payload.sender === user._id ? 'self' : 'other');
-          div.innerText = data.payload.text;
+        if (data.type === 'MESSAGES_HISTORY') {
+          data.payload.messages.forEach(element => {
+            const div = document.createElement('div');
+          div.className = 'message ' + (element.sender.toString() === user._id.toString() ? 'self' : 'other');
+          div.innerText = element.text;
           messagesDiv.appendChild(div);
+          });
+          
           messagesDiv.scrollTop = messagesDiv.scrollHeight;
         } else if (data.type === 'ERROR') {
           alert(data.payload);
@@ -142,7 +145,7 @@
       const conversationId = "687c7701bd878a3c163636b1";
 
       const msg = {
-        type: 'SEND_MESSAGE',
+        type: 'GET_MESSAGES',
         payload: {
           conversationId,
           text

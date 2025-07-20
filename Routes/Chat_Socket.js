@@ -42,7 +42,7 @@ function initializeChatServer(server) {
           if (type === 'SEND_MESSAGE') {
             const { conversationId, text } = payload;
 
-            if (!conversationId || !text) {
+            if (!conversationId) {
               return ws.send(JSON.stringify({
                 type: 'ERROR',
                 payload: 'Missing conversationId or text'
@@ -67,7 +67,6 @@ function initializeChatServer(server) {
               type: 'NEW_MESSAGE',
               payload: {
                 ...message.toObject(),
-                sender: userId
               }
             };
 
@@ -101,6 +100,47 @@ function initializeChatServer(server) {
               payload: { messageId }
             }));
           }
+
+          if (type === 'GET_MESSAGES') {
+            const { conversationId } = payload;
+
+            if (!conversationId) {
+              return ws.send(JSON.stringify({
+                type: 'ERROR',
+                payload: 'Missing conversationId'
+              }));
+            }
+
+            const conversation = await Conversation.findById(conversationId);
+            if (!conversation) {
+              return ws.send(JSON.stringify({
+                type: 'ERROR',
+                payload: 'Conversation not found'
+              }));
+            }
+
+            // Optional: Verify if requesting user is a participant
+            const isParticipant = conversation.participants.includes(userId);
+            if (!isParticipant) {
+              return ws.send(JSON.stringify({
+                type: 'ERROR',
+                payload: 'Unauthorized access to conversation'
+              }));
+            }
+
+            const messages = await Message.find({ conversation: conversationId })
+              .sort({ createdAt: 1 }) // earliest to latest
+              .populate('sender', 'firstName lastName _id');
+
+            ws.send(JSON.stringify({
+              type: 'MESSAGES_HISTORY',
+              payload: {
+                conversationId,
+                messages
+              }
+            }));
+          }
+
 
         } catch (err) {
           console.error('WebSocket message error:', err);
