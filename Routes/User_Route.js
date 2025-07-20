@@ -16,7 +16,7 @@ const Product = require('../Models/Product_Model');
 
 // Middleware to parse cookies
 router.use(cookieParser());
-router.use(express.json())
+router.use(express.json());
 
 // POST /api/register
 router.post(

@@ -3,10 +3,10 @@ const router = express.Router();
 const cookieParser = require('cookie-parser');
 const upload = require('../MiddleWare/multer'); // multer config
 const cloudinaryUploadMultiple = require('../MiddleWare/upload_images');
+const Authentication = require('../MiddleWare/Authentication');
 const attachOwnerFromJWT = require('../MiddleWare/Attach_Owner');
 const validateProductFields = require('../MiddleWare/Product_Validate');
 const Product = require('../Models/Product_Model');
-const Authentication = require('../MiddleWare/Authentication');
 
 // Required to read cookies
 router.use(cookieParser());
@@ -106,6 +106,28 @@ router.get(
       ]
     }).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
 
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error('Search error:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get(
+  '/byId',
+  async (req, res) => {
+  try {
+    const {productId} = req.query;
+
+    if (!productId) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    // Case-insensitive search on 'title' and 'description' fields
+    const product = await Product.findById(productId).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
+    if(!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
     res.status(200).json({ products });
   } catch (error) {
     console.error('Search error:', error.message);
