@@ -36,6 +36,11 @@ const productSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  cost: {
+    type: Number,
+    required: true,
+    min: 0
+  },
   status: {
     type: String,
     enum: ['available', 'sold'],

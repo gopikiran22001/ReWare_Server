@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
-  otp: {
+  onetimePasscode: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'OneTimeCode' // references the OTP document
   },

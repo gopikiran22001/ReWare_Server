@@ -113,7 +113,7 @@ router.put(
         return res.status(400).json({ message: 'Request already processed' });
       }
       const product = await Product.findById(request.product);
-      if (!product || product.owner.toString() !== userId.toString()) {
+      if (!product || product.owner.toString() !== userId.toString() || product.status==='available') {
         return res.status(400).json({ message: 'Invalid product or ownership mismatch' });
       }
 
