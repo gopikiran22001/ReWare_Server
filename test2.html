@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Test Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #chat-container {
+      width: 400px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .mine {
+      background: #d1e7dd;
+      align-self: flex-end;
+    }
+
+    .theirs {
+      background: #e2e3e5;
+      align-self: flex-start;
+    }
+
+    #form {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      font-size: 16px;
+      outline: none;
+    }
+
+    #sendBtn {
+      padding: 10px 20px;
+      border: none;
+      background: #0d6efd;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #sendBtn:hover {
+      background: #0b5ed7;
+    }
+
+    #status {
+      font-size: 12px;
+      color: #777;
+      padding: 4px 8px;
+      text-align: right;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    <form id="form">
+      <input id="input" type="text" placeholder="Type a message..." />
+      <button id="sendBtn" type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    // 🔧 Replace these with your values
+    const RECEIVER_ID = "6878d116c0e61b3cd91c9f76";
+    const USER_ID = "6877b72d7495507105ce7afa";
+    const CONVERSATION_ID = "687c7701bd878a3c163636b1";
+    const ws = new WebSocket(`ws://localhost:8080/ws`);
+    const messagesDiv = document.getElementById('messages');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const status = document.getElementById('status');
+
+    ws.onopen = () => {
+      status.innerText = "Connected";
+    };
+
+    ws.onmessage = (event) => {
+      const { type, payload } = JSON.parse(event.data);
+      if (type === 'NEW_MESSAGE') {
+        appendMessage(payload.text, payload.sender === USER_ID);
+        markSeen(payload._id);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.log(err)
+      status.innerText = "Error connecting to server";
+    };
+
+    ws.onclose = () => {
+      status.innerText = "Disconnected";
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      const message = {
+        type: 'SEND_MESSAGE',
+        payload: {
+          conversationId: CONVERSATION_ID,
+          receiverId: RECEIVER_ID,
+          text
+        }
+      };
+
+      ws.send(JSON.stringify(message));
+      input.value = '';
+    });
+
+    function appendMessage(text, mine = false) {
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.classList.add(mine ? 'mine' : 'theirs');
+      div.innerText = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function markSeen(messageId) {
+      ws.send(JSON.stringify({
+        type: 'MARK_SEEN',
+        payload: { messageId }
+      }));
+    }
+  </script>
+</body>
+</html>

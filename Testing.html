@@ -1,115 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>User Registration</title>
+  <meta charset="UTF-8" />
+  <title>Login & Chat</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 40px auto;
-      max-width: 500px;
-    }
-    form {
-      border: 1px solid #ccc;
       padding: 20px;
-      border-radius: 8px;
     }
-    label {
-      font-weight: bold;
+
+    #chat {
+      display: none;
+      margin-top: 20px;
+      border: 1px solid black;
     }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      margin-bottom: 15px;
+
+    #messages {
+      height: 300px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      overflow-y: scroll;
+      background: #f9f9f9;
     }
-    button {
-      background: #4CAF50;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+
     .message {
-      margin-top: 15px;
-      font-weight: bold;
+      margin-bottom: 10px;
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    .message.self {
+      background: #d4f7dc;
+      text-align: right;
+    }
+
+    .message.other {
+      background: #f7d4d4;
+      text-align: left;
+    }
+
+    input, button {
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    #status {
+      color: green;
+      margin-bottom: 10px;
+    }
+
+    #login {
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
-  <h2>Register New User</h2>
+  <h2>Login</h2>
+  <div id="login">
+    <input id="email" type="email" placeholder="Email" required><br>
+    <input id="password" type="password" placeholder="Password" required><br>
+    <button onclick="login()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
 
-  <form id="registerForm" enctype="multipart/form-data">
-    <label for="firstName">First Name:</label>
-    <input type="text" name="firstName" required>
-
-    <label for="lastName">Last Name:</label>
-    <input type="text" name="lastName" required>
-
-    <label for="email">Email:</label>
-    <input type="email" name="email" required>
-
-    <label for="phone">Phone:</label>
-    <input type="text" name="phone" required>
-
-    <label for="password">Password:</label>
-    <input type="password" name="password" required>
-
-    <label for="gender">Gender:</label>
-    <select name="gender">
-      <option value="male">Male</option>
-      <option value="female">Female</option>
-      <option value="other" selected>Other</option>
-    </select>
-
-    <label for="dateOfBirth">Date of Birth:</label>
-    <input type="date" name="dateOfBirth">
-
-    <label for="profile">Profile Photo:</label>
-    <input type="file" name="profile" accept="image/*">
-
-    <button type="submit">Register</button>
-
-    <div class="message" id="message"></div>
-  </form>
+  <div id="chat">
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    <input id="textInput" type="text" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
   <script>
-    const form = document.getElementById('registerForm');
-    const messageDiv = document.getElementById('message');
+    let socket;
+    let token = '';
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      messageDiv.textContent = '';
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
-      const formData = new FormData(form);
+      const res = await fetch('http://localhost:3000/reware/user/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include', // IMPORTANT to allow setting cookie
+        body: JSON.stringify({ email, password })
+      });
 
-      try {
-        const response = await fetch('http://localhost:3000/reware/users/register', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include' // Important to receive HTTP-only cookies
-        });
+      const data = await res.json();
 
-        const data = await response.json();
-
-        if (response.ok) {
-          messageDiv.style.color = 'green';
-          messageDiv.textContent = '✅ ' + data.message;
-          console.log(response.user);
-          form.reset();
-        } else {
-          messageDiv.style.color = 'red';
-          messageDiv.textContent = '❌ ' + (data.error || data.message || 'Registration failed');
-        }
-
-      } catch (err) {
-        messageDiv.style.color = 'red';
-        messageDiv.textContent = '❌ Error: ' + err.message;
+       if (res.ok ) {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('chat').style.display = 'block';
+        connectWebSocket(data.user);
+      } else {
+        document.getElementById('loginError').innerText = data.message || 'Login failed';
       }
-    });
-  </script>
+    }
 
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function connectWebSocket(user) {
+    
+      socket = new WebSocket(`ws://localhost:8080/ws?userId=${user._id}`);
+
+      socket.onopen = () => {
+        document.getElementById('status').innerText = 'Connected';
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const messagesDiv = document.getElementById('messages');
+
+        if (data.type === 'NEW_MESSAGE') {
+          const div = document.createElement('div');
+          div.className = 'message ' + (data.payload.sender === user._id ? 'self' : 'other');
+          div.innerText = data.payload.text;
+          messagesDiv.appendChild(div);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        } else if (data.type === 'ERROR') {
+          alert(data.payload);
+        }
+      };
+
+      socket.onclose = () => {
+        document.getElementById('status').innerText = 'Disconnected';
+      };
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('textInput');
+      const text = input.value;
+      if (!text.trim()) return;
+
+      // Dummy IDs for testing — replace with real ones in your app
+      const conversationId = "687c7701bd878a3c163636b1";
+
+      const msg = {
+        type: 'SEND_MESSAGE',
+        payload: {
+          conversationId,
+          text
+        }
+      };
+
+      socket.send(JSON.stringify(msg));
+      input.value = '';
+    }
+  </script>
 </body>
 </html>

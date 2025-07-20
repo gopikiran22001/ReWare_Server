@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
-const mongoose=require('mongoose');
 
 // Middleware
 const upload = require('../MiddleWare/multer'); // Multer config
@@ -13,6 +12,7 @@ const AttachOwner = require('../MiddleWare/Attach_Owner');
 
 // Models
 const User = require('../Models/User_Model');
+const Product = require('../Models/Product_Model');
 
 // Middleware to parse cookies
 router.use(cookieParser());
@@ -44,7 +44,7 @@ router.post(
       const token = jwt.sign(
         { _id: user._id, name: `${user.firstName} ${user.lastName}` },
         process.env.JWT_SECRET,
-        { expiresIn: '3d' }
+        { expiresIn: process.env.JWT_EXPIRES_IN }
       );
 
       // Set token in HTTP-only cookie
@@ -100,7 +100,7 @@ router.post(
     const token = jwt.sign(
       { _id: user._id, name: `${user.firstName} ${user.lastName}` },
       process.env.JWT_SECRET,
-      { expiresIn: '3d' }
+      { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
     // Set HTTP-only cookie
@@ -244,7 +244,7 @@ router.put(
     user.wishlist.push(productId);
     await user.save();
 
-    res.status(200).json({ message: 'Product added to wishlist', wishlist: user.wishlist });
+    res.status(200).json({ message: 'Product added to wishlist'});
   } catch (err) {
     console.error('Add to wishlist error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -270,12 +270,38 @@ router.delete(
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.status(200).json({
-      message: 'Product removed from wishlist',
-      wishlist: user.wishlist
-    });
+    res.status(200).json({ message: 'Product removed from wishlist' });
   } catch (error) {
     console.error('Remove from wishlist error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+router.get(
+  '/wishlist',
+  Authentication,
+  AttachOwner, 
+  async (req, res) => {
+  try {
+    const userId = req.owner._id;
+
+    const user= await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const products = await Product.find({
+        _id: { $in: user.wishlist }
+      }).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
+
+      res.status(200).json({
+        wishlist: products
+      });
+
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

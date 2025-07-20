@@ -13,9 +13,11 @@ router.use(cookieParser());
 router.use(express.json());
 
 // GET /api/products
-router.get('/get-products', async (req, res) => {
+router.get(
+  '/',
+  async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }); // Newest first
+    const products = await Product.find().select('-customer -createdAt -updatedAt').sort({ createdAt: -1 }); // Newest first
     res.status(200).json({ products });
   } catch (error) {
     console.error('Error fetching products:', error.message);
@@ -25,7 +27,7 @@ router.get('/get-products', async (req, res) => {
 
 // Route: POST /api/add-product
 router.post(
-  '/add-product',
+  '/',
   Authentication,
   upload.array('images'),               
   cloudinaryUploadMultiple,                                       
@@ -50,5 +52,66 @@ router.post(
     }
   }
 );
+
+router.delete(
+  '/',
+  Authentication,
+  attachOwnerFromJWT,
+  async (req, res) => {
+    try {
+      const {productId} = req.query;
+      
+
+      if (!productId || productId.length !== 24) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+
+      const product = await Product.findById(productId);
+
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Check ownership
+      if (product.owner._id.toString() !== req.owner._id.toString()) {
+        return res.status(403).json({ error: 'Unauthorized to delete this product' });
+      }
+
+      await Product.findByIdAndDelete(productId);
+
+      res.status(200).json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+// Route: GET /api/products/search?search=yourQuery
+router.get(
+  '/search',
+  async (req, res) => {
+  try {
+    const {searchQuery} = req.query;
+
+    if (!searchQuery) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    // Case-insensitive search on 'title' and 'description' fields
+    const products = await Product.find({
+      $or: [
+        { title: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } }
+      ]
+    }).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
+
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error('Search error:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 module.exports = router;
