@@ -66,11 +66,6 @@ const userSchema = new mongoose.Schema({
     ref: 'Product'
   }],
 
-  conversations: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conversation'
-  }],
-
   notifications: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Notification'
