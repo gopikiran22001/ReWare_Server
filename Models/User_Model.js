@@ -24,7 +24,6 @@ const userSchema = new mongoose.Schema({
 
   phone: {
     type: String,
-    required: true,
     trim: true
   },
 
@@ -38,7 +37,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 6,
-    select: false // Prevent it from being sent in queries by default
+    select: false
   },
 
   gender: {
@@ -52,7 +51,7 @@ const userSchema = new mongoose.Schema({
   },
 
   profilePhoto: {
-    type: String, // Cloudinary public URL or local path
+    type: String,
     default: ''
   },
 
@@ -60,7 +59,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-    },
+  },
+
+  wishlist: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
 
   conversations: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -70,11 +74,26 @@ const userSchema = new mongoose.Schema({
   notifications: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Notification'
-  }]
+  }],
+
+  // 🌍 Sustainability / engagement tracking
+  points: {
+    type: Number,
+    default: 0
+  },
+  waterSaved: {
+    type: Number, // in liters
+    default: 0
+  },
+  co2Saved: {
+    type: Number, // in grams or kg
+    default: 0
+  }
 }, {
   timestamps: true
 });
 
+// Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
@@ -87,6 +106,7 @@ userSchema.pre('save', async function (next) {
   }
 });
 
+// Add password comparison method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

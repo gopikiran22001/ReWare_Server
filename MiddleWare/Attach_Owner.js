@@ -12,7 +12,7 @@ const attachOwnerFromJWT = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Attach owner info to req.body (only _id and name)
-    req.body.owner = {
+    req.owner = {
       _id: decoded._id,
       name: decoded.name
     };

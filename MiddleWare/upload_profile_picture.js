@@ -5,9 +5,8 @@ const cloudinaryUploadSingle = async (req, res, next) => {
   try {
     const file = req.file;
 
-    if (!file) {
-      next();
-    }
+    // If no file is uploaded, skip to next middleware
+    if (!file) return next();
 
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(file.path, {
@@ -17,13 +16,19 @@ const cloudinaryUploadSingle = async (req, res, next) => {
       resource_type: 'image',
     });
 
-    // Attach URL to request
-    req.imageUrl = result.secure_url;
-    await fs.unlink(req.file.path); // remove local temp file
-    next(); // proceed to controller
+    // Attach uploaded image URL to request
+    req.profilePhoto = result.secure_url;
+
+    // Delete temp file
+    await fs.unlink(file.path);
+
+    next(); // Continue to controller
   } catch (error) {
     console.error('Cloudinary Upload Error:', error);
-    return res.status(500).json({ error: 'Profile photo upload failed', details: error.message });
+    return res.status(500).json({
+      error: 'Profile photo upload failed',
+      details: error.message
+    });
   }
 };
 
