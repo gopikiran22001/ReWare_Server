@@ -9,6 +9,7 @@ const initializeChatServer = require('./Routes/Chat_Socket');
 const productRoutes=require('./Routes/Product_Route');
 const userRoutes=require('./Routes/User_Route');
 const requestRoutes=require('./Routes/Request_Route');
+const transactionRoutes=require('./Routes/Transaction_Route');
 
 const connectDB = require('./DataBase/Connection');
 connectDB();
@@ -22,6 +23,7 @@ app.use(cors({
 app.use('/reware/product',productRoutes);
 app.use('/reware/user', userRoutes);
 app.use('/reware/request', requestRoutes);
+app.use('/reware/transaction',transactionRoutes);
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
 

@@ -7,7 +7,7 @@ const Request = require('../Models/Request_Model');
 const Product = require('../Models/Product_Model');
 const Transaction = require('../Models/Transaction_Model');
 const User = require('../Models/User_Model');
-const OneTimeCode = require('../Models/OneTimeCode_Model');
+const OneTimeCode = require('../Models/OTP_Model');
 
 router.use(cookieParser());
 router.use(express.json());
