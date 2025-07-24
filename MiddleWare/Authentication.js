@@ -5,6 +5,7 @@ const requireLogin = async (req, res, next) => {
   const token = req.cookies?.token;
 
   if (!token) {
+    // console.log(token)
     return res.status(401).json({ error: 'Access denied. Please login first.' });
   }
 
@@ -15,8 +16,6 @@ const requireLogin = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ error: 'User not found. Invalid token.' });
     }
-
-    req.user = user; // Attach user to request
     next(); // Proceed to the protected route
   } catch (err) {
     return res.status(403).json({ error: 'Invalid or expired token.' });

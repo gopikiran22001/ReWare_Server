@@ -1,63 +1,91 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+
   name: {
     type: String,
     required: true,
     trim: true
   },
+
   brand: {
     type: String,
     trim: true
   },
+
   size: {
     type: String,
     trim: true
   },
+
   condition: {
     type: String,
     enum: ['new', 'like new', 'used', 'fair'],
     default: 'used'
   },
+
   images: {
     type: [String],
     required: true
   },
+
   colors: {
     type: [String],
     default: []
   },
+
   description: {
     type: String,
     trim: true,
     default: 'No description provided.'
   },
+
   tags: {
     type: [String],
     default: []
   },
+
   cost: {
     type: Number,
     required: true,
     min: 0
   },
+
   status: {
     type: String,
     enum: ['available', 'sold'],
     default: 'available'
   },
+
+  category: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  carbonFootprint: { // also known as CO2
+    type: Number, // in kilograms (kg CO2e)
+    default: null
+  },
+
+  waterUsage: {
+    type: Number, 
+    default: null
+  },
+
   owner: {
     _id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: false
     },
     name: {
       type: String,
-      required: true,
+      required: false,
       trim: true
     }
   },
+
   customer: {
     _id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -68,6 +96,7 @@ const productSchema = new mongoose.Schema({
       trim: true
     }
   }
+
 }, {
   timestamps: true
 });

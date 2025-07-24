@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+router.use(cookieParser());
+router.use(express.json());
 const upload = require('../MiddleWare/multer'); // multer config
 const cloudinaryUploadMultiple = require('../MiddleWare/upload_images');
 const Authentication = require('../MiddleWare/Authentication');
@@ -9,8 +12,7 @@ const validateProductFields = require('../MiddleWare/Product_Validate');
 const Product = require('../Models/Product_Model');
 
 // Required to read cookies
-router.use(cookieParser());
-router.use(express.json());
+
 
 // GET /api/products
 router.get(
@@ -35,9 +37,29 @@ router.post(
   validateProductFields,                   
   async (req, res) => {
     try {
+      // console.log(req)
+      const mlData=await fetch('http://localhost:5000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+          {
+            brand:req.body.brand,
+            category:req.body.category
+          }
+        )
+      });
+
+      
+      const data=await mlData.json();
+      // console.log(data)
+
       const product = new Product({
         ...req.body,
-        images: req.imageUrls
+        images: req.imageUrls,
+        carbonFootprint:data.co2_emissions,
+        waterUsage:data.water_consumption
       });
 
       await product.save();
