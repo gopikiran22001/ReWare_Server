@@ -17,13 +17,13 @@ router.get(
     try {
       const userId = req.owner._id;
 
-        const requests = await Request.find({
+      const requests = await Request.find({
         $or: [{ owner: userId }, { customer: userId }]
-        }).sort({ createdAt: -1 }); // latest first
+      }).sort({ createdAt: -1 }); // latest first
 
-        if(!requests) {
-            return res.status(404).json({ message: 'No requests found' });
-        }
+      if (!requests) {
+        return res.status(404).json({ message: 'No requests found' });
+      }
 
       res.status(200).json(requests);
     } catch (error) {
@@ -64,20 +64,20 @@ router.post(
   async (req, res) => {
     try {
       const customerId = req.owner._id; // logged-in user as customer
-      const {productId} = req.body;
+      const { productId } = req.body;
 
       if (!productId) {
         return res.status(400).json({ message: 'Missing required fields' });
       }
 
-      const product=await Product.findById(productId);
-      if(!product) {
+      const product = await Product.findById(productId);
+      if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
       const newRequest = new Request({
         owner: product.owner._id,
         customer: customerId,
-        product:productId,
+        product: productId,
         status: 'pending', // default status, customize as needed
       });
 
@@ -109,11 +109,11 @@ router.put(
       if (request.owner.toString() !== userId.toString()) {
         return res.status(403).json({ message: 'Unauthorized: Not the product owner' });
       }
-      if (request.status!=='pending') {
+      if (request.status !== 'pending') {
         return res.status(400).json({ message: 'Request already processed' });
       }
       const product = await Product.findById(request.product);
-      if (!product || product.owner.toString() !== userId.toString() || product.status==='available') {
+      if (!product || product.owner.toString() !== userId.toString() || product.status === 'available') {
         return res.status(400).json({ message: 'Invalid product or ownership mismatch' });
       }
 
@@ -171,7 +171,7 @@ router.put(
       if (request.owner.toString() !== userId.toString()) {
         return res.status(403).json({ message: 'Unauthorized: Not the product owner' });
       }
-      if (request.status!=='pending') {
+      if (request.status !== 'pending') {
         return res.status(400).json({ message: 'Request already processed' });
       }
       const product = await Product.findById(request.product);
@@ -183,7 +183,8 @@ router.put(
       await request.save();
 
       res.status(200).json({
-        message: 'Request Rejected' });
+        message: 'Request Rejected'
+      });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -210,7 +211,7 @@ router.put(
       if (request.customer.toString() !== userId.toString()) {
         return res.status(403).json({ message: 'Unauthorized: Not the product owner' });
       }
-      if (request.status!=='pending') {
+      if (request.status !== 'pending') {
         return res.status(400).json({ message: 'Request already processed' });
       }
       const product = await Product.findById(request.product);
@@ -222,7 +223,8 @@ router.put(
       await request.save();
 
       res.status(200).json({
-        message: 'Request Rejected' });
+        message: 'Request Rejected'
+      });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
     }

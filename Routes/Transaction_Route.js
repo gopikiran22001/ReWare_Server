@@ -18,25 +18,25 @@ function generateOTP() {
 }
 
 router.get(
-    '/', 
-    Authentication,
-    attachOwnerFromJWT,
-    async (req, res) => {
-  try {
-    const userId = req.owner._id;
+  '/',
+  Authentication,
+  attachOwnerFromJWT,
+  async (req, res) => {
+    try {
+      const userId = req.owner._id;
 
-    const transactions = await Transaction.find({
-      $or: [
-        { owner: userId },
-        { customer: userId }
-      ]
-    }).select('-onetimePasscode');
+      const transactions = await Transaction.find({
+        $or: [
+          { owner: userId },
+          { customer: userId }
+        ]
+      }).select('-onetimePasscode');
 
-    res.status(200).json({ transactions });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
+      res.status(200).json({ transactions });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  });
 
 
 // Route to accept a transaction (customer generates OTP, owner confirms with it)
@@ -74,7 +74,7 @@ router.put(
       if (transaction.owner.toString() === userId.toString()) {
         const otpDoc = await OneTimeCode.findById(onetimePasscode);
 
-        if ( !otpDoc || otpDoc.transaction.toString() !== transactionId.toString()) {
+        if (!otpDoc || otpDoc.transaction.toString() !== transactionId.toString()) {
           return res.status(400).json({ message: 'Invalid or mismatched OTP' });
         }
 
