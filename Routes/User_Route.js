@@ -261,10 +261,10 @@ router.put(
     }
 
     // Check if product exists
-    // const product = await Product.findById(productId);
-    // if (!product) {
-    //   return res.status(404).json({ message: 'Product not found' });
-    // }
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
     // Find user and update wishlist
     const user = await User.findById(userId);
 
@@ -337,4 +337,15 @@ router.get(
   }
 });
 
+router.get(
+  '/logout',
+  (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+
+  res.status(200).json({ message: 'Logged out successfully' });
+});
 module.exports = router;
