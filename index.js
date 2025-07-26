@@ -2,7 +2,8 @@
 const express = require('express');
 const cors=require('cors');
 const app = express();
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const http = require('http');
 
 const initializeChatServer = require('./Routes/Chat_Socket');
@@ -16,10 +17,10 @@ connectDB();
 
 app.use(express.json());
 app.use(cors({
-  origin: process.env.ORIGIN, // your frontend URL
-  credentials: true // 🔑 allow sending cookies
+  origin: process.env.ORIGIN,
+  credentials: true 
 }));
-
+console.log(process.env.ORIGIN);
 app.use('/reware/product',productRoutes);
 app.use('/reware/user', userRoutes);
 app.use('/reware/request', requestRoutes);
