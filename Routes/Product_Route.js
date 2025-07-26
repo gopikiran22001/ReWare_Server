@@ -18,48 +18,48 @@ const Product = require('../Models/Product_Model');
 router.get(
   '/',
   async (req, res) => {
-  try {
-    const products = await Product.find().select('-customer -createdAt -updatedAt').sort({ createdAt: -1 }); // Newest first
-    res.status(200).json({ products });
-  } catch (error) {
-    console.error('Error fetching products:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+    try {
+      const products = await Product.find().select('-customer -createdAt -updatedAt').sort({ createdAt: -1 }); // Newest first
+      res.status(200).json({ products });
+    } catch (error) {
+      console.error('Error fetching products:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 // Route: POST /api/add-product
 router.post(
   '/',
   Authentication,
-  upload.array('images'),               
-  cloudinaryUploadMultiple,                                       
-  attachOwnerFromJWT,                      
-  validateProductFields,                   
+  upload.array('images'),
+  cloudinaryUploadMultiple,
+  attachOwnerFromJWT,
+  validateProductFields,
   async (req, res) => {
     try {
       // console.log(req)
-      const mlData=await fetch('http://localhost:5000/predict', {
+      const mlData = await fetch('http://localhost:5000/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(
           {
-            brand:req.body.brand,
-            category:req.body.category
+            brand: req.body.brand,
+            category: req.body.category
           }
         )
       });
 
-      
-      const data=await mlData.json();
+
+      const data = await mlData.json();
       // console.log(data)
 
       const product = new Product({
         ...req.body,
         images: req.imageUrls,
-        carbonFootprint:data.co2_emissions,
-        waterUsage:data.water_consumption
+        carbonFootprint: data.co2_emissions,
+        waterUsage: data.water_consumption
       });
 
       await product.save();
@@ -81,8 +81,8 @@ router.delete(
   attachOwnerFromJWT,
   async (req, res) => {
     try {
-      const {productId} = req.query;
-      
+      const { productId } = req.query;
+
 
       if (!productId || productId.length !== 24) {
         return res.status(400).json({ error: 'Invalid product ID' });
@@ -113,49 +113,49 @@ router.delete(
 router.get(
   '/search',
   async (req, res) => {
-  try {
-    const {searchQuery} = req.query;
+    try {
+      const { searchQuery } = req.query;
 
-    if (!searchQuery) {
-      return res.status(400).json({ error: 'Search query is required' });
+      if (!searchQuery) {
+        return res.status(400).json({ error: 'Search query is required' });
+      }
+
+      // Case-insensitive search on 'title' and 'description' fields
+      const products = await Product.find({
+        $or: [
+          { title: { $regex: searchQuery, $options: 'i' } },
+          { description: { $regex: searchQuery, $options: 'i' } }
+        ]
+      }).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
+
+      res.status(200).json({ products });
+    } catch (error) {
+      console.error('Search error:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Case-insensitive search on 'title' and 'description' fields
-    const products = await Product.find({
-      $or: [
-        { title: { $regex: searchQuery, $options: 'i' } },
-        { description: { $regex: searchQuery, $options: 'i' } }
-      ]
-    }).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
-
-    res.status(200).json({ products });
-  } catch (error) {
-    console.error('Search error:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+  });
 
 router.get(
   '/byId',
   async (req, res) => {
-  try {
-    const {productId} = req.query;
+    try {
+      const { productId } = req.query;
 
-    if (!productId) {
-      return res.status(400).json({ error: 'Search query is required' });
-    }
+      if (!productId) {
+        return res.status(400).json({ error: 'Search query is required' });
+      }
 
-    // Case-insensitive search on 'title' and 'description' fields
-    const product = await Product.findById(productId).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
-    if(!product) {
-      return res.status(404).json({ error: 'Product not found' });
+      // Case-insensitive search on 'title' and 'description' fields
+      const product = await Product.findById(productId).select('-customer -createdAt -updatedAt').sort({ createdAt: -1 });
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      res.status(200).json({ products });
+    } catch (error) {
+      console.error('Search error:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
     }
-    res.status(200).json({ products });
-  } catch (error) {
-    console.error('Search error:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+  });
 
 
 module.exports = router;

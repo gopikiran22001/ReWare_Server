@@ -31,11 +31,11 @@ const validateProductFields = (req, res, next) => {
   //   errors.push('Tags must be an array');
   // }
 
-  if(brand && typeof brand !== 'string' && brand!==''){
+  if (brand && typeof brand !== 'string' && brand !== '') {
     errors.push('Brand must be a string');
   }
 
-  if(category && typeof category !== 'string' && category!==''){
+  if (category && typeof category !== 'string' && category !== '') {
     errors.push('Category must be a string');
   }
 
