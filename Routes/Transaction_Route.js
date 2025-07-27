@@ -194,7 +194,7 @@ router.delete(
 
       product.status = 'available';
 
-      new newNotification = new Notification({
+      const newNotification = new Notification({
         userId: isOwner ? transaction.customer : transaction.owner,
         header: "Transaction Canceled",
         message: `The transaction for ${product.name} has been canceled.`,
