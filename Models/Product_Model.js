@@ -20,7 +20,6 @@ const productSchema = new mongoose.Schema({
 
   condition: {
     type: String,
-    enum: ['new', 'like new', 'used', 'fair'],
     default: 'used'
   },
 

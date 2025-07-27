@@ -60,11 +60,11 @@ router.post(
         images: req.imageUrls,
         carbonFootprint: data.co2_emissions,
         waterUsage: data.water_consumption,
-        owner:{
-          _id:req.owner._id,
-          name:req.owner.name
+        owner: {
+          _id: req.owner._id,
+          name: req.owner.name
         },
-        customer:{}
+        customer: {}
       });
 
       await product.save();
@@ -137,6 +137,20 @@ router.get(
     } catch (error) {
       console.error('Search error:', error.message);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+router.get(
+  '/my-products',
+  Authentication,
+  attachOwnerFromJWT,
+  async (req, res) => {
+    try {
+      const myProducts = await Product.find({ owner: req.owner.id }).sort({ createdAt: -1 });
+      res.json({ products: myProducts });
+    } catch (error) {
+      console.error('Error fetching my products:', error);
+      res.status(500).json({ message: 'Server error' });
     }
   });
 
