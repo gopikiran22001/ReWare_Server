@@ -96,10 +96,10 @@ router.put(
 
         // Transfer points and update product
         customer.points -= product.cost;
-        customer.totalSwaps+=1;
+        customer.totalSwaps += 1;
 
         owner.points += product.cost;
-        owner.totalSwaps+=1;
+        owner.totalSwaps += 1;
 
         product.status = 'sold';
         product.customer = {
@@ -109,12 +109,41 @@ router.put(
 
         transaction.status = 'accepted';
 
+        const newNotification1 = new Notification({
+          userId: customer._id,
+          header: "Transaction Completed",
+          message: `The transaction for ${product.name} has been Completed.`,
+          type: 'system',
+          link: {
+            _id: newRequest._id,
+            type: 'request'
+          },
+          createdAt: new Date()
+        });
+
+
+
+        const newNotification2 = new Notification({
+          userId: owner._id,
+          header: "Transaction Completed",
+          message: `The transaction for ${product.name} has been Completed.`,
+          type: 'system',
+          link: {
+            _id: newRequest._id,
+            type: 'request'
+          },
+          createdAt: new Date()
+        });
+
+
         // Save all updates
         await Promise.all([
           product.save(),
           customer.save(),
           owner.save(),
-          transaction.save()
+          transaction.save(),
+          newNotification1.save(),
+          newNotification2.save()
         ]);
 
         return res.status(200).json({ message: 'Exchange successful' });
@@ -159,13 +188,30 @@ router.delete(
 
       // Optionally, mark product as available again
       const product = await Product.findById(transaction.product);
-      if (product && product.status === 'available') {
-        // No change needed — product is still available
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
       }
+
+      product.status = 'available';
+
+      new newNotification = new Notification({
+        userId: isOwner ? transaction.customer : transaction.owner,
+        header: "Transaction Canceled",
+        message: `The transaction for ${product.name} has been canceled.`,
+        type: 'system',
+        link: {
+          _id: newRequest._id,
+          type: 'request'
+        },
+        createdAt: new Date()
+      });
+
+      await newNotification.save();
 
       // Cancel the transaction
       transaction.status = 'cancelled';
       await transaction.save();
+      await product.save();
 
       return res.status(200).json({ message: 'Transaction cancelled successfully' });
 

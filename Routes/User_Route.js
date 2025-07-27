@@ -13,6 +13,7 @@ const AttachOwner = require('../MiddleWare/Attach_Owner');
 // Models
 const User = require('../Models/User_Model');
 const Product = require('../Models/Product_Model');
+const Notification = require('../Models/Notification_Model');
 
 // Middleware to parse cookies
 router.use(cookieParser());
@@ -69,7 +70,18 @@ router.post(
         profilePhoto: req.imageUrl || '', // fallback if no image uploaded
       });
 
+
       await user.save();
+
+      const newNotification = new Notification({
+        userId: user._id,
+        header: "Welcome to ReWare!",
+        message: "We're excited to have you on board. Start exploring and find great deals on products you love.",
+        type: 'message',
+        createdAt: new Date()
+      });
+
+      await newNotification.save();
 
       // Generate JWT
       const token = jwt.sign(

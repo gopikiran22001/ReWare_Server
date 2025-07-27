@@ -5,6 +5,7 @@ const Request = require('../Models/Request_Model');
 const Authentication = require('../MiddleWare/Authentication');
 const attachOwnerFromJWT = require('../MiddleWare/Attach_Owner');
 const Product = require('../Models/Product_Model');
+const Notification = require('../Models/Notification_Model');
 
 router.use(cookieParser());
 router.use(express.json());
@@ -83,6 +84,21 @@ router.post(
 
       await newRequest.save();
 
+      const newNotification = new Notification({
+        userId: product.owner._id,
+        header: "New Request Received",
+        message: `You have received a new request for your product ${product.name}`,
+        type: 'system',
+        link: {
+          _id: newRequest._id,
+          type: 'request'
+        },
+        createdAt: new Date()
+      });
+
+      await newNotification.save();
+
+
       res.status(201).json({ message: 'Request created successfully', request: newRequest._id });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -136,6 +152,20 @@ router.put(
         status: 'pending',
       });
 
+      const newNotification = new Notification({
+        userId: request.customer,
+        header: "Request Accepted",
+        message: `Your request for ${product.name} has been accepted.`,
+        type: 'system',
+        link: {
+          _id: request._id,
+          type: 'request'
+        },
+        createdAt: new Date()
+      });
+
+      await newNotification.save();
+
       // Update Request with transaction and accepted status
       request.transactionId = transaction._id;
       request.status = 'accepted';
@@ -179,6 +209,20 @@ router.put(
         return res.status(400).json({ message: 'Invalid product or ownership mismatch' });
       }
 
+      const newNotification = new Notification({
+        userId: request.customer,
+        header: "Request Rejected",
+        message: `Your request for ${product.name} has been rejected.`,
+        type: 'system',
+        link: {
+          _id: request._id,
+          type: 'request'
+        },
+        createdAt: new Date()
+      });
+
+      await newNotification.save();
+
       request.status = 'rejected';
       await request.save();
 
@@ -218,6 +262,20 @@ router.put(
       if (!product || product.owner.toString() !== userId.toString()) {
         return res.status(400).json({ message: 'Invalid product or ownership mismatch' });
       }
+
+      const newNotification = new Notification({
+        userId: request.customer,
+        header: "Request Canceled",
+        message: `The Request for ${product.name} has been Canceled.`,
+        type: 'system',
+        link: {
+          _id: request._id,
+          type: 'request'
+        },
+        createdAt: new Date()
+      });
+
+      await newNotification.save();
 
       request.status = 'cancelled';
       await request.save();
