@@ -35,5 +35,5 @@ const server = http.createServer(app);
 initializeChatServer(server);
 
 server.listen(8080, () => {
-  console.log('Server running with WebSocket on port 8080');
+  console.log('Server running with WebSocket on port http://localhost:8080');
 }); 
