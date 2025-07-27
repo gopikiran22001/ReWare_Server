@@ -83,6 +83,10 @@ const userSchema = new mongoose.Schema({
   co2Saved: {
     type: Number, // in grams or kg
     default: 0
+  },
+  totalSwaps:{
+    type:Number,
+    default:0
   }
 }, {
   timestamps: true

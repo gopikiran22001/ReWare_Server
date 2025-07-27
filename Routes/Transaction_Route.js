@@ -96,7 +96,10 @@ router.put(
 
         // Transfer points and update product
         customer.points -= product.cost;
+        customer.totalSwaps+=1;
+
         owner.points += product.cost;
+        owner.totalSwaps+=1;
 
         product.status = 'sold';
         product.customer = {
