@@ -59,7 +59,12 @@ router.post(
         ...req.body,
         images: req.imageUrls,
         carbonFootprint: data.co2_emissions,
-        waterUsage: data.water_consumption
+        waterUsage: data.water_consumption,
+        owner:{
+          _id:req.owner._id,
+          name:req.owner.name
+        },
+        customer:{}
       });
 
       await product.save();
