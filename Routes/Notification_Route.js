@@ -15,7 +15,8 @@ router.get(
     async (req, res) => {
         try {
             const userId = req.owner._id;
-            const notifications = await Notification.findById(userId);
+            const notifications = await Notification.find({ userId })
+                .sort({ createdAt: -1 });
             res.status(200).json(notifications);
         } catch (error) {
             console.error(error);
