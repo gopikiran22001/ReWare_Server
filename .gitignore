@@ -49,7 +49,7 @@ web_modules/
 
 # Optional npm cache directory
 .npm
-.html
+*.html
 # Optional eslint cache
 .eslintcache
 
@@ -137,3 +137,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Ignore Python virtual environments
+venv/
+.venv/
