@@ -11,7 +11,6 @@ const attachOwnerFromJWT = require('../MiddleWare/Attach_Owner');
 const validateProductFields = require('../MiddleWare/Product_Validate');
 const Product = require('../Models/Product_Model');
 
-// Required to read cookies
 
 
 // GET /api/products
